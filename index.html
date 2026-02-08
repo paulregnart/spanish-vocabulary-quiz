@@ -505,12 +505,6 @@
 
             <div id="feedback" class="feedback"></div>
 
-            <button id="explain-btn" class="btn btn-secondary" onclick="explainAnswer()" style="display: none;">
-                🤖 AI Explain This
-            </button>
-            
-            <div id="ai-explanation" class="feedback" style="display: none;"></div>
-
             <button id="next-btn" class="btn btn-primary" onclick="nextQuestion()" style="display: none;">
                 Next Question
             </button>
@@ -964,7 +958,6 @@
             const question = questions[currentQuestionIndex];
             const options = document.querySelectorAll('.option');
             const feedback = document.getElementById('feedback');
-            const explainBtn = document.getElementById('explain-btn');
 
             // Disable all options
             options.forEach(opt => opt.classList.add('disabled'));
@@ -977,13 +970,10 @@
                 document.getElementById('score').textContent = score;
                 feedback.textContent = '✓ Correct! Great job!';
                 feedback.className = 'feedback correct show';
-                explainBtn.style.display = 'none';
             } else {
                 options[index].classList.add('incorrect');
                 feedback.textContent = `✗ Incorrect. The correct answer is: ${question.options[question.correct]}`;
                 feedback.className = 'feedback incorrect show';
-                // Show explain button for wrong answers
-                explainBtn.style.display = 'block';
             }
 
             // Show next button
@@ -992,8 +982,6 @@
 
         function nextQuestion() {
             currentQuestionIndex++;
-            document.getElementById('explain-btn').style.display = 'none';
-            document.getElementById('ai-explanation').style.display = 'none';
             loadQuestion();
         }
 
@@ -1058,71 +1046,6 @@
                 }
             }
             return '';
-        }
-
-        // AI Explanation Feature
-        async function explainAnswer() {
-            const apiToken = getApiToken();
-            if (!apiToken) {
-                alert('Please add your Hugging Face API token in Settings first!');
-                return;
-            }
-
-            const question = questions[currentQuestionIndex];
-            const explainBtn = document.getElementById('explain-btn');
-            const aiExplanation = document.getElementById('ai-explanation');
-            
-            explainBtn.disabled = true;
-            explainBtn.textContent = '⏳ AI is thinking...';
-            aiExplanation.style.display = 'block';
-            aiExplanation.className = 'feedback show';
-            aiExplanation.innerHTML = '<div class="loading"></div> Generating explanation...';
-
-            try {
-                const prompt = `You are a helpful Spanish teacher. A student just answered this question incorrectly:
-
-Question: ${question.question}
-Correct Answer: ${question.options[question.correct]}
-
-Please provide a brief, friendly explanation (2-3 sentences) that:
-1. Explains what the correct answer means
-2. Gives a usage example
-3. Provides a memory tip if helpful
-
-Keep it concise and encouraging.`;
-
-                const response = await fetch(HF_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${apiToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        inputs: prompt,
-                        parameters: {
-                            max_new_tokens: 200,
-                            temperature: 0.7,
-                            return_full_text: false
-                        }
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data[0] && data[0].generated_text) {
-                    aiExplanation.innerHTML = `<strong>🤖 AI Tutor:</strong> ${data[0].generated_text.trim()}`;
-                } else if (data.error) {
-                    throw new Error(data.error);
-                } else {
-                    aiExplanation.innerHTML = `<strong>💡 Quick Tip:</strong> "${question.options[question.correct]}" is the correct answer. Try to remember this for next time!`;
-                }
-            } catch (error) {
-                console.error('AI Error:', error);
-                aiExplanation.innerHTML = `<strong>💡 Quick Tip:</strong> The correct answer "${question.options[question.correct]}" is important to remember. Keep practicing!`;
-            }
-
-            explainBtn.textContent = '🤖 AI Explain This';
-            explainBtn.disabled = false;
         }
 
         // AI Conversation Feature
@@ -1254,7 +1177,7 @@ Respond naturally in a mix of English and Spanish (mostly English with some Span
                     <li>✓ 20 questions total</li>
                     <li>✓ Starts easy, gets harder</li>
                     <li>✓ Everyday words & phrases</li>
-                    <li>✓ AI explanations available</li>
+                    <li>✓ Instant feedback</li>
                 `;
             } else {
                 document.getElementById('quiz-title').textContent = 'Tech & Accounting Quiz!';
@@ -1263,7 +1186,7 @@ Respond naturally in a mix of English and Spanish (mostly English with some Span
                     <li>✓ 20 questions total</li>
                     <li>✓ Programming terminology</li>
                     <li>✓ Accounting & business terms</li>
-                    <li>✓ AI explanations available</li>
+                    <li>✓ Web development vocab</li>
                 `;
             }
             
