@@ -97,6 +97,97 @@
             transform: scale(1.1);
         }
 
+        .chat-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ai-message, .user-message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            max-width: 85%;
+            line-height: 1.5;
+        }
+
+        .ai-message {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            align-self: flex-start;
+        }
+
+        .user-message {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ai-setup-notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .ai-setup-notice p {
+            margin: 0;
+            color: #856404;
+        }
+
+        #settings-screen h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        #settings-screen h3 {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
         .quiz-info {
             display: flex;
             justify-content: space-between;
@@ -366,6 +457,8 @@
         <div class="tabs" id="tabs">
             <button class="tab active" onclick="switchTab('common')">Common Vocabulary</button>
             <button class="tab" onclick="switchTab('tech')">Tech & Accounting</button>
+            <button class="tab" onclick="switchTab('conversation')">AI Conversation</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
         </div>
 
         <!-- Start Screen -->
@@ -412,9 +505,65 @@
 
             <div id="feedback" class="feedback"></div>
 
+            <button id="explain-btn" class="btn btn-secondary" onclick="explainAnswer()" style="display: none;">
+                🤖 AI Explain This
+            </button>
+            
+            <div id="ai-explanation" class="feedback" style="display: none;"></div>
+
             <button id="next-btn" class="btn btn-primary" onclick="nextQuestion()" style="display: none;">
                 Next Question
             </button>
+        </div>
+
+        <!-- Conversation Practice Screen -->
+        <div id="conversation-screen" style="display: none;">
+            <div class="ai-setup-notice" id="ai-notice" style="display: none;">
+                <p>⚠️ AI features require an API key. Go to <strong>Settings</strong> tab to add your Hugging Face token.</p>
+            </div>
+            <div class="chat-container" id="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="ai-message">
+                        <strong>🤖 AI Tutor:</strong> ¡Hola! I'm your Spanish practice partner. Let's have a conversation in Spanish! You can ask me questions, practice vocabulary, or just chat. I'll help correct your Spanish and explain things. What would you like to talk about?
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Type in Spanish or English..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" style="display: none;">
+            <h2>⚙️ AI Settings</h2>
+            <p style="margin: 20px 0; color: #666;">
+                To use AI features (explanations and conversation), you need a free Hugging Face API token.
+            </p>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h3 style="margin-bottom: 10px;">How to get your token:</h3>
+                <ol style="margin-left: 20px; color: #666;">
+                    <li>Go to <a href="https://huggingface.co/settings/tokens" target="_blank" style="color: #667eea;">Hugging Face Tokens</a></li>
+                    <li>Click "New token"</li>
+                    <li>Name it "spanish-quiz" and select "Read" role</li>
+                    <li>Copy the token (starts with hf_)</li>
+                    <li>Paste it below</li>
+                </ol>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <label for="api-token-input" style="display: block; margin-bottom: 10px; font-weight: bold;">Hugging Face API Token:</label>
+                <input type="password" id="api-token-input" class="chat-input" placeholder="hf_..." style="width: 100%; margin-bottom: 10px;">
+                <button class="btn btn-primary" onclick="saveApiToken()">💾 Save Token</button>
+                <button class="btn btn-secondary" onclick="clearApiToken()" style="margin-left: 10px;">🗑️ Clear Token</button>
+            </div>
+
+            <div id="token-status" style="margin: 20px 0; padding: 15px; border-radius: 10px; display: none;"></div>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                <strong>🔒 Privacy Note:</strong> Your API token is stored only in your browser's local storage and never sent anywhere except directly to Hugging Face API.
+            </div>
         </div>
 
         <!-- Results Screen -->
@@ -432,6 +581,76 @@
     </div>
 
     <script>
+        // Hugging Face API Configuration
+        const HF_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
+
+        // Get API token from localStorage
+        function getApiToken() {
+            return localStorage.getItem('hf_api_token') || '';
+        }
+
+        // Save API token to localStorage
+        function saveApiToken() {
+            const input = document.getElementById('api-token-input');
+            const token = input.value.trim();
+            const status = document.getElementById('token-status');
+
+            if (!token) {
+                status.style.display = 'block';
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+                status.textContent = '❌ Please enter a valid token';
+                return;
+            }
+
+            if (!token.startsWith('hf_')) {
+                status.style.display = 'block';
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+                status.textContent = '❌ Hugging Face tokens start with "hf_"';
+                return;
+            }
+
+            localStorage.setItem('hf_api_token', token);
+            status.style.display = 'block';
+            status.style.background = '#d4edda';
+            status.style.color = '#155724';
+            status.textContent = '✅ Token saved! AI features are now active.';
+            
+            // Update UI
+            updateAIStatus();
+        }
+
+        // Clear API token
+        function clearApiToken() {
+            localStorage.removeItem('hf_api_token');
+            document.getElementById('api-token-input').value = '';
+            const status = document.getElementById('token-status');
+            status.style.display = 'block';
+            status.style.background = '#f8d7da';
+            status.style.color = '#721c24';
+            status.textContent = '🗑️ Token cleared. AI features disabled.';
+            updateAIStatus();
+        }
+
+        // Update AI status in UI
+        function updateAIStatus() {
+            const hasToken = !!getApiToken();
+            const notice = document.getElementById('ai-notice');
+            if (notice) {
+                notice.style.display = hasToken ? 'none' : 'block';
+            }
+        }
+
+        // Check token on page load
+        window.addEventListener('load', () => {
+            updateAIStatus();
+            const token = getApiToken();
+            if (token) {
+                document.getElementById('api-token-input').value = token;
+            }
+        });
+
         // Common vocabulary questions - Easy (1-12) and Intermediate (13-20)
         const commonQuestions = [
             // EASY QUESTIONS (1-12)
@@ -745,6 +964,7 @@
             const question = questions[currentQuestionIndex];
             const options = document.querySelectorAll('.option');
             const feedback = document.getElementById('feedback');
+            const explainBtn = document.getElementById('explain-btn');
 
             // Disable all options
             options.forEach(opt => opt.classList.add('disabled'));
@@ -757,10 +977,13 @@
                 document.getElementById('score').textContent = score;
                 feedback.textContent = '✓ Correct! Great job!';
                 feedback.className = 'feedback correct show';
+                explainBtn.style.display = 'none';
             } else {
                 options[index].classList.add('incorrect');
                 feedback.textContent = `✗ Incorrect. The correct answer is: ${question.options[question.correct]}`;
                 feedback.className = 'feedback incorrect show';
+                // Show explain button for wrong answers
+                explainBtn.style.display = 'block';
             }
 
             // Show next button
@@ -769,6 +992,8 @@
 
         function nextQuestion() {
             currentQuestionIndex++;
+            document.getElementById('explain-btn').style.display = 'none';
+            document.getElementById('ai-explanation').style.display = 'none';
             loadQuestion();
         }
 
@@ -805,55 +1030,6 @@
             loadQuestion();
         }
 
-        function switchTab(quizType) {
-            // Update current quiz type
-            currentQuizType = quizType;
-            
-            // Update active tab styling
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Load appropriate questions
-            questions = quizType === 'common' ? commonQuestions : techQuestions;
-            
-            // Reset quiz state
-            currentQuestionIndex = 0;
-            score = 0;
-            selectedOption = null;
-            
-            // Update start screen content
-            const startScreen = document.getElementById('start-screen');
-            const quizScreen = document.getElementById('quiz-screen');
-            const resultsScreen = document.getElementById('results-screen');
-            
-            if (quizType === 'common') {
-                document.getElementById('quiz-title').textContent = 'Welcome to Common Vocabulary!';
-                document.getElementById('quiz-description').textContent = 'Test your everyday Spanish vocabulary.';
-                document.getElementById('quiz-features').innerHTML = `
-                    <li>✓ 20 questions total</li>
-                    <li>✓ Starts easy, gets harder</li>
-                    <li>✓ Everyday words & phrases</li>
-                    <li>✓ Instant feedback</li>
-                `;
-            } else {
-                document.getElementById('quiz-title').textContent = 'Tech & Accounting Quiz!';
-                document.getElementById('quiz-description').textContent = 'Learn Spanish for software engineering and accounting.';
-                document.getElementById('quiz-features').innerHTML = `
-                    <li>✓ 20 questions total</li>
-                    <li>✓ Programming terminology</li>
-                    <li>✓ Accounting & business terms</li>
-                    <li>✓ Web development vocab</li>
-                `;
-            }
-            
-            // Show start screen, hide others
-            startScreen.classList.remove('hide');
-            startScreen.style.display = 'block';
-            quizScreen.style.display = 'none';
-            resultsScreen.classList.remove('show');
-        }
-
         // Pronunciation feature using Web Speech API
         function speakQuestion() {
             if ('speechSynthesis' in window) {
@@ -882,6 +1058,217 @@
                 }
             }
             return '';
+        }
+
+        // AI Explanation Feature
+        async function explainAnswer() {
+            const apiToken = getApiToken();
+            if (!apiToken) {
+                alert('Please add your Hugging Face API token in Settings first!');
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            const explainBtn = document.getElementById('explain-btn');
+            const aiExplanation = document.getElementById('ai-explanation');
+            
+            explainBtn.disabled = true;
+            explainBtn.textContent = '⏳ AI is thinking...';
+            aiExplanation.style.display = 'block';
+            aiExplanation.className = 'feedback show';
+            aiExplanation.innerHTML = '<div class="loading"></div> Generating explanation...';
+
+            try {
+                const prompt = `You are a helpful Spanish teacher. A student just answered this question incorrectly:
+
+Question: ${question.question}
+Correct Answer: ${question.options[question.correct]}
+
+Please provide a brief, friendly explanation (2-3 sentences) that:
+1. Explains what the correct answer means
+2. Gives a usage example
+3. Provides a memory tip if helpful
+
+Keep it concise and encouraging.`;
+
+                const response = await fetch(HF_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt,
+                        parameters: {
+                            max_new_tokens: 200,
+                            temperature: 0.7,
+                            return_full_text: false
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data[0] && data[0].generated_text) {
+                    aiExplanation.innerHTML = `<strong>🤖 AI Tutor:</strong> ${data[0].generated_text.trim()}`;
+                } else if (data.error) {
+                    throw new Error(data.error);
+                } else {
+                    aiExplanation.innerHTML = `<strong>💡 Quick Tip:</strong> "${question.options[question.correct]}" is the correct answer. Try to remember this for next time!`;
+                }
+            } catch (error) {
+                console.error('AI Error:', error);
+                aiExplanation.innerHTML = `<strong>💡 Quick Tip:</strong> The correct answer "${question.options[question.correct]}" is important to remember. Keep practicing!`;
+            }
+
+            explainBtn.textContent = '🤖 AI Explain This';
+            explainBtn.disabled = false;
+        }
+
+        // AI Conversation Feature
+        async function sendMessage() {
+            const apiToken = getApiToken();
+            if (!apiToken) {
+                alert('Please add your Hugging Face API token in Settings first!');
+                return;
+            }
+
+            const input = document.getElementById('chat-input');
+            const messagesContainer = document.getElementById('chat-messages');
+            const userText = input.value.trim();
+
+            if (!userText) return;
+
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'user-message';
+            userMsg.innerHTML = `<strong>You:</strong> ${userText}`;
+            messagesContainer.appendChild(userMsg);
+
+            // Clear input
+            input.value = '';
+
+            // Add loading indicator
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'ai-message';
+            loadingMsg.innerHTML = '<div class="loading"></div> AI is typing...';
+            messagesContainer.appendChild(loadingMsg);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                const prompt = `You are a friendly Spanish language tutor having a conversation with a student learning Spanish. They said: "${userText}"
+
+Respond naturally in a mix of English and Spanish (mostly English with some Spanish). If they wrote in Spanish, gently correct any mistakes and provide the right way to say it. Keep responses to 2-3 sentences. Be encouraging and helpful.`;
+
+                const response = await fetch(HF_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: prompt,
+                        parameters: {
+                            max_new_tokens: 150,
+                            temperature: 0.8,
+                            return_full_text: false
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Remove loading message
+                messagesContainer.removeChild(loadingMsg);
+
+                // Add AI response
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'ai-message';
+                
+                if (data[0] && data[0].generated_text) {
+                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> ${data[0].generated_text.trim()}`;
+                } else if (data.error) {
+                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> I'm having trouble connecting right now. But keep practicing! Try asking me about Spanish vocabulary or grammar.`;
+                } else {
+                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> That's interesting! Keep practicing your Spanish. What else would you like to learn?`;
+                }
+                
+                messagesContainer.appendChild(aiMsg);
+            } catch (error) {
+                console.error('Chat Error:', error);
+                messagesContainer.removeChild(loadingMsg);
+                
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'ai-message';
+                errorMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> Sorry, I'm having connection issues. Keep practicing and try again in a moment!`;
+                messagesContainer.appendChild(errorMsg);
+            }
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function switchTab(quizType) {
+            // Update current quiz type
+            currentQuizType = quizType;
+            
+            // Update active tab styling
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Hide all screens
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('results-screen').classList.remove('show');
+            document.getElementById('conversation-screen').style.display = 'none';
+            document.getElementById('settings-screen').style.display = 'none';
+
+            if (quizType === 'conversation') {
+                // Show conversation screen
+                document.getElementById('conversation-screen').style.display = 'block';
+                updateAIStatus();
+                return;
+            }
+
+            if (quizType === 'settings') {
+                // Show settings screen
+                document.getElementById('settings-screen').style.display = 'block';
+                return;
+            }
+            
+            // Load appropriate questions
+            questions = quizType === 'common' ? commonQuestions : techQuestions;
+            
+            // Reset quiz state
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedOption = null;
+            
+            // Update start screen content
+            const startScreen = document.getElementById('start-screen');
+            
+            if (quizType === 'common') {
+                document.getElementById('quiz-title').textContent = 'Welcome to Common Vocabulary!';
+                document.getElementById('quiz-description').textContent = 'Test your everyday Spanish vocabulary.';
+                document.getElementById('quiz-features').innerHTML = `
+                    <li>✓ 20 questions total</li>
+                    <li>✓ Starts easy, gets harder</li>
+                    <li>✓ Everyday words & phrases</li>
+                    <li>✓ AI explanations available</li>
+                `;
+            } else {
+                document.getElementById('quiz-title').textContent = 'Tech & Accounting Quiz!';
+                document.getElementById('quiz-description').textContent = 'Learn Spanish for software engineering and accounting.';
+                document.getElementById('quiz-features').innerHTML = `
+                    <li>✓ 20 questions total</li>
+                    <li>✓ Programming terminology</li>
+                    <li>✓ Accounting & business terms</li>
+                    <li>✓ AI explanations available</li>
+                `;
+            }
+            
+            // Show start screen
+            startScreen.style.display = 'block';
         }
     </script>
 </body>
