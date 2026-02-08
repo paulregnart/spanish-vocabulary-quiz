@@ -40,8 +40,38 @@
         .subtitle {
             text-align: center;
             color: #666;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
         }
 
         .quiz-info {
@@ -309,12 +339,18 @@
         <h1>🇪🇸 Spanish Vocabulary Quiz</h1>
         <p class="subtitle">Test your Spanish knowledge!</p>
 
+        <!-- Tab Navigation -->
+        <div class="tabs" id="tabs">
+            <button class="tab active" onclick="switchTab('common')">Common Vocabulary</button>
+            <button class="tab" onclick="switchTab('tech')">Tech & Accounting</button>
+        </div>
+
         <!-- Start Screen -->
         <div id="start-screen" class="start-screen">
             <div class="start-icon">📚</div>
-            <h2>Welcome to the Spanish Quiz!</h2>
-            <p>Test your vocabulary with progressively challenging questions.</p>
-            <ul>
+            <h2 id="quiz-title">Welcome to the Spanish Quiz!</h2>
+            <p id="quiz-description">Test your vocabulary with progressively challenging questions.</p>
+            <ul id="quiz-features">
                 <li>✓ 20 questions total</li>
                 <li>✓ Starts easy, gets harder</li>
                 <li>✓ Multiple choice format</li>
@@ -369,8 +405,8 @@
     </div>
 
     <script>
-        // Quiz questions - Easy (1-12) and Intermediate (13-20)
-        const questions = [
+        // Common vocabulary questions - Easy (1-12) and Intermediate (13-20)
+        const commonQuestions = [
             // EASY QUESTIONS (1-12)
             {
                 question: "What does 'Hola' mean in English?",
@@ -495,6 +531,135 @@
             }
         ];
 
+        // Tech & Accounting vocabulary questions
+        const techQuestions = [
+            // EASY - Basic Tech Terms (1-12)
+            {
+                question: "What is 'ordenador' or 'computadora'?",
+                options: ["Keyboard", "Computer", "Mouse", "Screen"],
+                correct: 1,
+                difficulty: "easy"
+            },
+            {
+                question: "What does 'código' mean?",
+                options: ["Code", "File", "Folder", "Program"],
+                correct: 0,
+                difficulty: "easy"
+            },
+            {
+                question: "What is 'el ratón' in computing?",
+                options: ["Mouse", "Monitor", "Keyboard", "Printer"],
+                correct: 0,
+                difficulty: "easy"
+            },
+            {
+                question: "What does 'guardar' mean?",
+                options: ["Delete", "Save", "Open", "Close"],
+                correct: 1,
+                difficulty: "easy"
+            },
+            {
+                question: "What is 'teclado'?",
+                options: ["Screen", "Keyboard", "Speaker", "Camera"],
+                correct: 1,
+                difficulty: "easy"
+            },
+            {
+                question: "What does 'pantalla' mean?",
+                options: ["Window", "Door", "Screen", "Button"],
+                correct: 2,
+                difficulty: "easy"
+            },
+            {
+                question: "What is 'archivo' in English?",
+                options: ["File", "Archive", "Folder", "Document"],
+                correct: 0,
+                difficulty: "easy"
+            },
+            {
+                question: "What does 'carpeta' mean in computing?",
+                options: ["File", "Window", "Folder", "Desktop"],
+                correct: 2,
+                difficulty: "easy"
+            },
+            {
+                question: "What is 'sitio web'?",
+                options: ["Email", "Website", "Browser", "Server"],
+                correct: 1,
+                difficulty: "easy"
+            },
+            {
+                question: "What does 'descargar' mean?",
+                options: ["Upload", "Download", "Install", "Delete"],
+                correct: 1,
+                difficulty: "easy"
+            },
+            {
+                question: "What is 'usuario' in English?",
+                options: ["Password", "User", "Account", "Profile"],
+                correct: 1,
+                difficulty: "easy"
+            },
+            {
+                question: "What does 'contraseña' mean?",
+                options: ["Username", "Email", "Password", "Login"],
+                correct: 2,
+                difficulty: "easy"
+            },
+            // INTERMEDIATE - Professional Tech & Accounting (13-20)
+            {
+                question: "What is 'desarrollador' in English?",
+                options: ["Designer", "Developer", "Manager", "Tester"],
+                correct: 1,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What does 'depurar' mean in programming?",
+                options: ["To compile", "To debug", "To deploy", "To document"],
+                correct: 1,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What is 'base de datos'?",
+                options: ["Framework", "Database", "API", "Library"],
+                correct: 1,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What does 'factura' mean?",
+                options: ["Receipt", "Invoice", "Contract", "Report"],
+                correct: 1,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What is 'hoja de cálculo'?",
+                options: ["Spreadsheet", "Document", "Presentation", "Form"],
+                correct: 0,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What does 'presupuesto' mean?",
+                options: ["Profit", "Budget", "Revenue", "Expense"],
+                correct: 1,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What is 'servidor' in computing?",
+                options: ["Client", "Server", "Browser", "Router"],
+                correct: 1,
+                difficulty: "intermediate"
+            },
+            {
+                question: "What does 'ingreso' mean in accounting?",
+                options: ["Expense", "Asset", "Income/Revenue", "Liability"],
+                correct: 2,
+                difficulty: "intermediate"
+            }
+        ];
+
+        // Current quiz state
+        let currentQuizType = 'common';
+        let questions = commonQuestions;
         let currentQuestionIndex = 0;
         let score = 0;
         let selectedOption = null;
@@ -607,6 +772,55 @@
             document.getElementById('results-screen').classList.remove('show');
             document.getElementById('quiz-screen').style.display = 'block';
             loadQuestion();
+        }
+
+        function switchTab(quizType) {
+            // Update current quiz type
+            currentQuizType = quizType;
+            
+            // Update active tab styling
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Load appropriate questions
+            questions = quizType === 'common' ? commonQuestions : techQuestions;
+            
+            // Reset quiz state
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedOption = null;
+            
+            // Update start screen content
+            const startScreen = document.getElementById('start-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            
+            if (quizType === 'common') {
+                document.getElementById('quiz-title').textContent = 'Welcome to Common Vocabulary!';
+                document.getElementById('quiz-description').textContent = 'Test your everyday Spanish vocabulary.';
+                document.getElementById('quiz-features').innerHTML = `
+                    <li>✓ 20 questions total</li>
+                    <li>✓ Starts easy, gets harder</li>
+                    <li>✓ Everyday words & phrases</li>
+                    <li>✓ Instant feedback</li>
+                `;
+            } else {
+                document.getElementById('quiz-title').textContent = 'Tech & Accounting Quiz!';
+                document.getElementById('quiz-description').textContent = 'Learn Spanish for software engineering and accounting.';
+                document.getElementById('quiz-features').innerHTML = `
+                    <li>✓ 20 questions total</li>
+                    <li>✓ Programming terminology</li>
+                    <li>✓ Accounting & business terms</li>
+                    <li>✓ Web development vocab</li>
+                `;
+            }
+            
+            // Show start screen, hide others
+            startScreen.classList.remove('hide');
+            startScreen.style.display = 'block';
+            quizScreen.style.display = 'none';
+            resultsScreen.classList.remove('show');
         }
     </script>
 </body>
