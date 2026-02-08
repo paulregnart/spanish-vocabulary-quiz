@@ -575,8 +575,8 @@
     </div>
 
     <script>
-        // Hugging Face API Configuration
-        const HF_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2';
+        // Hugging Face API Configuration - using a faster, more reliable model
+        const HF_API_URL = 'https://api-inference.huggingface.co/models/google/flan-t5-base';
 
         // Get API token from localStorage
         function getApiToken() {
@@ -1079,9 +1079,7 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
             try {
-                const prompt = `You are a friendly Spanish language tutor having a conversation with a student learning Spanish. They said: "${userText}"
-
-Respond naturally in a mix of English and Spanish (mostly English with some Spanish). If they wrote in Spanish, gently correct any mistakes and provide the right way to say it. Keep responses to 2-3 sentences. Be encouraging and helpful.`;
+                const prompt = `You are a Spanish tutor. Student says: "${userText}". Respond helpfully in English and Spanish (2 sentences max). If they wrote Spanish, correct mistakes.`;
 
                 const response = await fetch(HF_API_URL, {
                     method: 'POST',
@@ -1092,9 +1090,11 @@ Respond naturally in a mix of English and Spanish (mostly English with some Span
                     body: JSON.stringify({
                         inputs: prompt,
                         parameters: {
-                            max_new_tokens: 150,
-                            temperature: 0.8,
-                            return_full_text: false
+                            max_length: 100,
+                            temperature: 0.7
+                        },
+                        options: {
+                            wait_for_model: true
                         }
                     })
                 });
@@ -1110,10 +1110,12 @@ Respond naturally in a mix of English and Spanish (mostly English with some Span
                 
                 if (data[0] && data[0].generated_text) {
                     aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> ${data[0].generated_text.trim()}`;
+                } else if (data.error && data.error.includes('loading')) {
+                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> The AI model is warming up (takes ~20 seconds first time). Please try again in a moment! Meanwhile, keep practicing: try saying "Hola" or "¿Cómo estás?"`;
                 } else if (data.error) {
-                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> I'm having trouble connecting right now. But keep practicing! Try asking me about Spanish vocabulary or grammar.`;
+                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> Connection issue. Error: ${data.error}. Try again shortly!`;
                 } else {
-                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> That's interesting! Keep practicing your Spanish. What else would you like to learn?`;
+                    aiMsg.innerHTML = `<strong>🤖 AI Tutor:</strong> Great question! Keep practicing your Spanish. Try asking about vocabulary or grammar.`;
                 }
                 
                 messagesContainer.appendChild(aiMsg);
